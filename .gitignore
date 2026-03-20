@@ -1,0 +1,13 @@
+# 本地启动脚本（Windows 特定）
+*.bat
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能问答助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .admin-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .stats {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+
+        .welcome-message h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .quick-question {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-question:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 12px 18px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            border: 1px solid #e0e0e0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 智能问答助手</h1>
+            <p>有什么问题尽管问我</p>
+            <a href="admin.html" class="admin-btn">⚙️ 管理后台</a>
+            <div class="stats" id="stats"></div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>👋 你好！我是智能助手</h2>
+                <p>我可以回答各种问题，试试下面的快捷提问：</p>
+                <div class="quick-questions" id="quickQuestions"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="输入你的问题...">
+            <button id="sendBtn">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储key
+        var STORAGE_KEY = 'qa_knowledge_base';
+
+        // 加载知识库
+        function loadKnowledgeBase() {
+            var data = localStorage.getItem(STORAGE_KEY);
+            if (data) {
+                return JSON.parse(data);
+            }
+            // 默认数据
+            return [
+                {
+                    id: Date.now(),
+                    question: "如何请假",
+                    keywords: ["请假", "休假", "假期", "年假"],
+                    answer: "请假流程：\n1. 打开飞书工作台\n2. 点击"请假"应用\n3. 选择假期类型和时间\n4. 填写请假理由\n5. 提交审批\n\n审批通常在1个工作日内完成。",
+                    category: "人事流程",
+                    enabled: true,
+                    viewCount: 0
+                },
+                {
+                    id: Date.now() + 1,
+                    question: "如何报销",
+                    keywords: ["报销", "费用", "发票", "钱"],
+                    answer: "报销流程：\n1. 打开飞书工作台\n2. 点击"报销"应用\n3. 上传发票照片\n4. 填写报销金额和说明\n5. 提交审批\n\n通常3个工作日内完成审批和打款。",
+                    category: "财务流程",
+                    enabled: true,
+                    viewCount: 0
+                },
+                {
+                    id: Date.now() + 2,
+                    question: "公司WiFi密码",
+                    keywords: ["WiFi", "密码", "网络", "无线", "上网"],
+                    answer: "公司WiFi信息：\n\n网络名称：Company-WiFi\n密码：Welcome2024\n\n如有连接问题，请联系IT部门：\n电话：ext 8888\n邮箱：it@company.com",
+                    category: "IT支持",
+                    enabled: true,
+                    viewCount: 0
+                }
+            ];
+        }
+
+        // 保存知识库
+        function saveKnowledgeBase(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // 更新浏览次数
+        function updateViewCount(id) {
+            var kb = loadKnowledgeBase();
+            for (var i = 0; i < kb.length; i++) {
+                if (kb[i].id === id) {
+                    kb[i].viewCount = (kb[i].viewCount || 0) + 1;
+                    saveKnowledgeBase(kb);
+                    break;
+                }
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            var kb = loadKnowledgeBase();
+            var enabled = [];
+            var totalViews = 0;
+
+            for (var i = 0; i < kb.length; i++) {
+                if (kb[i].enabled) {
+                    enabled.push(kb[i]);
+                }
+                totalViews += (kb[i].viewCount || 0);
+            }
+
+            document.getElementById('stats').textContent =
+                '共 ' + enabled.length + ' 条问答 | 累计咨询 ' + totalViews + ' 次';
+        }
+
+        // 生成快捷问题按钮
+        function generateQuickQuestions() {
+            var kb = loadKnowledgeBase();
+            var enabled = [];
+
+            for (var i = 0; i < kb.length; i++) {
+                if (kb[i].enabled) {
+                    enabled.push(kb[i]);
+                }
+            }
+
+            // 随机选择最多4个
+            var selected = [];
+            var temp = enabled.slice();
+            for (var i = 0; i < Math.min(4, temp.length); i++) {
+                var index = Math.floor(Math.random() * temp.length);
+                selected.push(temp[index]);
+                temp.splice(index, 1);
+            }
+
+            var container = document.getElementById('quickQuestions');
+            container.innerHTML = '';
+
+            for (var i = 0; i < selected.length; i++) {
+                var btn = document.createElement('div');
+                btn.className = 'quick-question';
+                btn.textContent = selected[i].question;
+                btn.setAttribute('data-question', selected[i].question);
+                btn.onclick = function() {
+                    askQuestion(this.getAttribute('data-question'));
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        // 提问
+        function askQuestion(question) {
+            document.getElementById('userInput').value = question;
+            sendMessage();
+        }
+
+        // 发送消息
+        function sendMessage() {
+            var input = document.getElementById('userInput');
+            var question = input.value.trim();
+
+            if (!question) return;
+
+            // 清除欢迎消息
+            var welcome = document.getElementById('welcomeMessage');
+            if (welcome) {
+                welcome.remove();
+            }
+
+            // 显示用户消息
+            addMessage(question, 'user');
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            // 显示输入中
+            showTyping();
+
+            // 延迟回答
+            setTimeout(function() {
+                var answer = findAnswer(question);
+                removeTyping();
+                addMessage(answer.text, 'bot', answer.category);
+
+                if (answer.id) {
+                    updateViewCount(answer.id);
+                    updateStats();
+                }
+
+                input.disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+                input.focus();
+            }, 800);
+        }
+
+        // 查找答案
+        function findAnswer(question) {
+            var kb = loadKnowledgeBase();
+            var questionLower = question.toLowerCase();
+            var bestMatch = null;
+            var bestScore = 0;
+
+            for (var i = 0; i < kb.length; i++) {
+                if (!kb[i].enabled) continue;
+
+                var score = 0;
+                var itemQuestion = kb[i].question.toLowerCase();
+
+                // 完全匹配
+                if (questionLower === itemQuestion) {
+                    score = 100;
+                }
+                // 包含匹配
+                else if (questionLower.indexOf(itemQuestion) >= 0 || itemQuestion.indexOf(questionLower) >= 0) {
+                    score = 80;
+                }
+                // 关键词匹配
+                else {
+                    for (var j = 0; j < kb[i].keywords.length; j++) {
+                        if (questionLower.indexOf(kb[i].keywords[j].toLowerCase()) >= 0) {
+                            score += 20;
+                        }
+                    }
+                }
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = kb[i];
+                }
+            }
+
+            if (bestScore > 30 && bestMatch) {
+                return {
+                    text: bestMatch.answer,
+                    category: bestMatch.category,
+                    id: bestMatch.id
+                };
+            }
+
+            return {
+                text: "😔 抱歉，我还没有学习到这个问题的答案。\n\n💡 您可以：\n- 换个方式提问\n- 点击快捷问题查看我能回答什么\n- 联系管理员添加相关内容",
+                category: null,
+                id: null
+            };
+        }
+
+        // 添加消息
+        function addMessage(text, type, category) {
+            var container = document.getElementById('chatContainer');
+            var messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+
+            var contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+
+            if (category) {
+                var tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.textContent = '📁 ' + category;
+                contentDiv.appendChild(tag);
+            }
+
+            messageDiv.appendChild(contentDiv);
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 显示输入中
+        function showTyping() {
+            var container = document.getElementById('chatContainer');
+            var indicator = document.createElement('div');
+            indicator.className = 'message bot';
+            indicator.id = 'typingIndicator';
+            indicator.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 移除输入中
+        function removeTyping() {
+            var indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // 初始化
+        function init() {
+            updateStats();
+            generateQuickQuestions();
+
+            // 绑定回车键
+            document.getElementById('userInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // 绑定发送按钮
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+            // 聚焦输入框
+            document.getElementById('userInput').focus();
+        }
+
+        // 页面加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
