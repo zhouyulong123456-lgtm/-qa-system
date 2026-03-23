@@ -252,26 +252,74 @@
     </div>
 
     <script>
-        // 从 localStorage 读取数据
-        function loadData() {
-            var stored = localStorage.getItem('qa_knowledge_base');
-            if (stored) {
-                try {
-                    return JSON.parse(stored);
-                } catch (e) {
-                    console.error('数据解析失败', e);
-                }
-            }
-            return [];
-        }
-
-        var allQuestions = loadData();
+        // 全局变量
+        var allQuestions = [];
         var enabledQuestions = [];
 
-        // 筛选启用的问答
-        for (var i = 0; i < allQuestions.length; i++) {
-            if (allQuestions[i].enabled) {
-                enabledQuestions.push(allQuestions[i]);
+        // 从服务器加载数据
+        function loadFromServer() {
+            return fetch('./qa-data.json')
+                .then(function(response) {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('无法加载数据');
+                })
+                .then(function(data) {
+                    // 保存到本地
+                    localStorage.setItem('qa_knowledge_base', JSON.stringify(data));
+                    return data;
+                })
+                .catch(function(error) {
+                    console.error('从服务器加载数据失败:', error);
+                    return [];
+                });
+        }
+
+        // 初始化数据
+        function initData() {
+            var stored = localStorage.getItem('qa_knowledge_base');
+
+            if (stored) {
+                // 如果本地有数据，直接使用
+                try {
+                    allQuestions = JSON.parse(stored);
+                    initPage();
+                } catch (e) {
+                    console.error('数据解析失败', e);
+                    // 解析失败，从服务器加载
+                    loadFromServer().then(function(data) {
+                        allQuestions = data;
+                        initPage();
+                    });
+                }
+            } else {
+                // 本地没有数据，从服务器加载
+                loadFromServer().then(function(data) {
+                    allQuestions = data;
+                    initPage();
+                });
+            }
+        }
+
+        // 初始化页面
+        function initPage() {
+            // 筛选启用的问答
+            enabledQuestions = [];
+            for (var i = 0; i < allQuestions.length; i++) {
+                if (allQuestions[i].enabled) {
+                    enabledQuestions.push(allQuestions[i]);
+                }
+            }
+
+            // 更新界面
+            updateStats();
+            createQuickButtons();
+
+            // 如果没有数据，显示提示
+            if (enabledQuestions.length === 0) {
+                document.getElementById('quickQuestions').innerHTML =
+                    '<div style="color:#999;">正在加载数据...</div>';
             }
         }
 
@@ -467,15 +515,8 @@
         // 发送按钮
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
 
-        // 初始化
-        updateStats();
-        createQuickButtons();
-
-        // 如果没有数据，显示提示
-        if (enabledQuestions.length === 0) {
-            document.getElementById('quickQuestions').innerHTML =
-                '<div style="color:#999;">暂无问答数据，请联系管理员</div>';
-        }
+        // 初始化数据和页面
+        initData();
     </script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1773999877736,
+    "question": "如何请假",
+    "keywords": [
+      "请假",
+      "假期"
+    ],
+    "answer": "你说的对",
+    "category": "",
+    "enabled": true,
+    "viewCount": 0,
+    "createdAt": 1773999877736,
+    "updatedAt": 1773999877736
+  },
+  {
+    "id": 1773999902931,
+    "question": "如何吃饭",
+    "keywords": [
+      "吃饭",
+      "饭",
+      "米饭"
+    ],
+    "answer": "这样吃就对了",
+    "category": "",
+    "enabled": true,
+    "viewCount": 2,
+    "createdAt": 1773999902931,
+    "updatedAt": 1773999902931
+  },
+  {
+    "id": 1773999926461,
+    "question": "如何喝水",
+    "keywords": [
+      "喝水",
+      "水",
+      "喝"
+    ],
+    "answer": "我觉得没问题",
+    "category": "",
+    "enabled": true,
+    "viewCount": 2,
+    "createdAt": 1773999926461,
+    "updatedAt": 1773999926461
+  }
+]
