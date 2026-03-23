@@ -224,10 +224,104 @@
                 transform: translateY(-10px);
             }
         }
+
+        /* 密码保护界面样式 */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .password-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .password-box h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .password-box p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .password-input:focus {
+            border-color: #667eea;
+        }
+
+        .password-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .password-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .password-error {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 密码保护界面 -->
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-box">
+            <h2>🔒 访问验证</h2>
+            <p>请输入访问密码</p>
+            <input type="password"
+                   class="password-input"
+                   id="passwordInput"
+                   placeholder="请输入密码">
+            <button class="password-btn" id="passwordBtn">确认</button>
+            <div class="password-error" id="passwordError">密码错误，请重试</div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div class="container" id="mainContainer" style="display: none;">
         <div class="header">
             <h1>🤖 智能问答助手</h1>
             <p>有什么问题尽管问我</p>
@@ -252,6 +346,78 @@
     </div>
 
     <script>
+        // ============================================
+        // 密码保护功能
+        // ============================================
+        var CORRECT_PASSWORD = 'qa2026'; // 修改这里设置你的密码
+
+        // 检查登录状态
+        function checkAuth() {
+            var isLoggedIn = sessionStorage.getItem('qa_authenticated');
+            if (isLoggedIn === 'true') {
+                showMainPage();
+            } else {
+                showPasswordPage();
+            }
+        }
+
+        // 显示密码页面
+        function showPasswordPage() {
+            document.getElementById('passwordOverlay').style.display = 'flex';
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('passwordInput').focus();
+        }
+
+        // 显示主页面
+        function showMainPage() {
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            initData();
+        }
+
+        // 验证密码
+        function verifyPassword() {
+            var input = document.getElementById('passwordInput');
+            var password = input.value.trim();
+            var errorDiv = document.getElementById('passwordError');
+
+            if (password === CORRECT_PASSWORD) {
+                // 密码正确
+                sessionStorage.setItem('qa_authenticated', 'true');
+                showMainPage();
+                errorDiv.style.display = 'none';
+                input.value = '';
+            } else {
+                // 密码错误
+                errorDiv.style.display = 'block';
+                input.value = '';
+                input.focus();
+
+                // 3秒后隐藏错误提示
+                setTimeout(function() {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 密码输入框回车事件
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyPassword();
+                }
+            });
+
+            document.getElementById('passwordBtn').addEventListener('click', verifyPassword);
+
+            // 页面加载时检查登录状态
+            checkAuth();
+        });
+
+        // ============================================
+        // 原有的问答系统代码
+        // ============================================
+
         // 全局变量
         var allQuestions = [];
         var enabledQuestions = [];
@@ -505,18 +671,26 @@
             }
         }
 
-        // 回车发送
-        document.getElementById('userInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+        // 绑定问答界面事件
+        function bindChatEvents() {
+            // 回车发送
+            document.getElementById('userInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // 发送按钮
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定聊天事件
+            bindChatEvents();
+
+            // 不在这里调用 initData()，等密码验证通过后再调用
         });
-
-        // 发送按钮
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
-
-        // 初始化数据和页面
-        initData();
     </script>
 </body>
 </html>
