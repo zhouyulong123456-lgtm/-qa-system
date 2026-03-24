@@ -372,6 +372,9 @@
         function showMainPage() {
             document.getElementById('passwordOverlay').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
+            // 绑定聊天事件
+            bindChatEvents();
+            // 初始化数据
             initData();
         }
 
@@ -683,14 +686,6 @@
             // 发送按钮
             document.getElementById('sendBtn').addEventListener('click', sendMessage);
         }
-
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 绑定聊天事件
-            bindChatEvents();
-
-            // 不在这里调用 initData()，等密码验证通过后再调用
-        });
     </script>
 </body>
 </html>
